@@ -1,4 +1,6 @@
 #include <SFML/Graphics.hpp>
+#include <vector>
+#include <iostream>
 
 const int SIZE=16;
 const int ARRAY_SIZE=SIZE*SIZE;
@@ -6,31 +8,38 @@ const int FIELD_SIZE=820;
 const int CELL_SIZE=50;
 
 
-//Вспомогательный класс для движений клавиш
+//Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ РєР»Р°СЃСЃ РґР»СЏ РґРІРёР¶РµРЅРёР№ РєР»Р°РІРёС€
 enum class Direction {Left=0, Right=1, Up=2, Down=3};
 
 //======================================================//
-//Класс для игрового поля
+//РљР»Р°СЃСЃ РґР»СЏ РёРіСЂРѕРІРѕРіРѕ РїРѕР»СЏ
 class Field : public sf::Drawable, public sf::Transformable
 {
 protected:
-    //массив, который смотрит, башня какого типа стоит в клетке(скорее всего потом это будет не int, а tower)
+    //РјР°СЃСЃРёРІ, РєРѕС‚РѕСЂС‹Р№ СЃРјРѕС‚СЂРёС‚, Р±Р°С€РЅСЏ РєР°РєРѕРіРѕ С‚РёРїР° СЃС‚РѕРёС‚ РІ РєР»РµС‚РєРµ(СЃРєРѕСЂРµРµ РІСЃРµРіРѕ РїРѕС‚РѕРј СЌС‚Рѕ Р±СѓРґРµС‚ РЅРµ int, Р° tower)
     int places[ARRAY_SIZE];
-    //массив отвечающий за дорогу для монстров
-    int road[ARRAY_SIZE];
+    //РјР°СЃСЃРёРІ РѕС‚РІРµС‡Р°СЋС‰РёР№ Р·Р° РґРѕСЂРѕРіСѓ РґР»СЏ РјРѕРЅСЃС‚СЂРѕРІ
+
     sf::Font font;
     int current_position;
 public:
+    int road[ARRAY_SIZE];
+    int road_starting_cell;
+    int road_finish_cell;
+
     Field()
     {
         font.loadFromFile("Bebas.ttf");
         Init();
     }
 
-    //создаем дорогу(потом сделаем рандомное создание)
+    //СЃРѕР·РґР°РµРј РґРѕСЂРѕРіСѓ(РїРѕС‚РѕРј СЃРґРµР»Р°РµРј СЂР°РЅРґРѕРјРЅРѕРµ СЃРѕР·РґР°РЅРёРµ)
 
     void MakeRoad1()
     {
+        road_starting_cell =32;
+        road_finish_cell = 223;
+
         for (int i=32;i<=45;i++)
             road[i]=1;
         road[61]=1;
@@ -69,14 +78,14 @@ public:
         current_position = 0;
     }
 
-    //отрисовываем поле в этой функции
+    //РѕС‚СЂРёСЃРѕРІС‹РІР°РµРј РїРѕР»Рµ РІ СЌС‚РѕР№ С„СѓРЅРєС†РёРё
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
     {
         states.transform *= getTransform();
         sf::Color color = sf::Color(200, 100, 200);
 
-        //готовим рамку для поля
+        //РіРѕС‚РѕРІРёРј СЂР°РјРєСѓ РґР»СЏ РїРѕР»СЏ
 
         sf::RectangleShape shape(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
         shape.setOutlineThickness(2.0);
@@ -84,19 +93,19 @@ public:
         shape.setFillColor(sf::Color::Transparent);
         target.draw(shape, states);
 
-        //готовим форму для клетки
+        //РіРѕС‚РѕРІРёРј С„РѕСЂРјСѓ РґР»СЏ РєР»РµС‚РєРё
 
         shape.setSize(sf::Vector2f(CELL_SIZE - 2, CELL_SIZE - 2));
         shape.setOutlineThickness(2.0);
         //shape.setOutlineColor(color);
         //shape.setFillColor(sf::Color::Transparent);
 
-        // Подготавливаем текстовую заготовку для отрисовки номеров плашек
+        // РџРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј С‚РµРєСЃС‚РѕРІСѓСЋ Р·Р°РіРѕС‚РѕРІРєСѓ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё РЅРѕРјРµСЂРѕРІ РїР»Р°С€РµРє
         sf::Text text("", font, 52);
 
         for (int i=0;i<ARRAY_SIZE;i++)
         {
-            //рассчитываем цвет для клетки
+            //СЂР°СЃСЃС‡РёС‚С‹РІР°РµРј С†РІРµС‚ РґР»СЏ РєР»РµС‚РєРё
 
             sf::Color temp_color = sf::Color(255, 255, 255);
             if (road[i]==1)
@@ -111,7 +120,7 @@ public:
                 if (places[i]==3)
                     temp_color=sf::Color(0,0,100);
 
-            //цвет для границы
+            //С†РІРµС‚ РґР»СЏ РіСЂР°РЅРёС†С‹
 
             shape.setFillColor(temp_color);
             if (current_position==i)
@@ -125,18 +134,18 @@ public:
             if (road[i]==1)
                 text.setString("");
 
-            //считаем координаты клетки
+            //СЃС‡РёС‚Р°РµРј РєРѕРѕСЂРґРёРЅР°С‚С‹ РєР»РµС‚РєРё
 
             sf::Vector2f position(i % SIZE * CELL_SIZE + 10.0, i / SIZE * CELL_SIZE + 10.0);
             shape.setPosition(position);
 
-            // Позицию текста подбирал вручную
+            // РџРѕР·РёС†РёСЋ С‚РµРєСЃС‚Р° РїРѕРґР±РёСЂР°Р» РІСЂСѓС‡РЅСѓСЋ
 			text.setPosition(position.x + (CELL_SIZE*2.75/10), position.y - (CELL_SIZE/5));
 
-            //отрисовываем плашку
+            //РѕС‚СЂРёСЃРѕРІС‹РІР°РµРј РїР»Р°С€РєСѓ
             target.draw(shape, states);
 
-            // Отрисовываем номер плашки
+            // РћС‚СЂРёСЃРѕРІС‹РІР°РµРј РЅРѕРјРµСЂ РїР»Р°С€РєРё
 			target.draw(text, states);
         }
 
@@ -148,11 +157,11 @@ public:
             places[current_position] = number;
     }
 
-    //функция-движение выделенной клетки
+    //С„СѓРЅРєС†РёСЏ-РґРІРёР¶РµРЅРёРµ РІС‹РґРµР»РµРЅРЅРѕР№ РєР»РµС‚РєРё
 
     void moving(Direction direction)
     {
-        //находим координаты клетки
+        //РЅР°С…РѕРґРёРј РєРѕРѕСЂРґРёРЅР°С‚С‹ РєР»РµС‚РєРё
 
         int col = current_position % SIZE;
         int row = current_position / SIZE;
@@ -171,6 +180,150 @@ public:
     }
 };
 //======================================================//
+
+class Enemy : public sf::Drawable, public sf::Transformable
+{
+protected:
+    int max_health;
+    int current_health=100;
+    int speed=1.0;
+    sf::Font font;
+    int position_x=500;
+    int position_y=500;
+
+public:
+    int road[ARRAY_SIZE];
+    int road_starting_cell;
+    int road_finish_cell;
+    std::vector <int> traectory = {};
+    int cur_cell=0;
+
+    Enemy()
+    {
+        font.loadFromFile("Bebas.ttf");
+    }
+
+    void Make_Traectory()
+    {
+        int cur_cell=road_starting_cell;
+        int prev_cell=-1;
+
+        traectory.push_back(road_starting_cell);
+        std::cout << "VOSHLY V CYCLE" << '\n';
+        while (cur_cell != road_finish_cell)
+        {
+            int next_cell=0;
+            if (road[cur_cell+1]==1 and prev_cell!=cur_cell+1)
+                next_cell=cur_cell+1;
+            if (cur_cell>0)
+                if (road[cur_cell-1]==1 and prev_cell!=cur_cell-1)
+                    next_cell=cur_cell-1;
+            if (road[cur_cell+SIZE]==1 and prev_cell!=cur_cell+SIZE)
+                next_cell=cur_cell+SIZE;
+            if (cur_cell>=SIZE)
+                if (road[cur_cell-SIZE]==1 and prev_cell!=cur_cell-SIZE)
+                    next_cell=cur_cell-SIZE;
+            if (next_cell!=0)
+            {
+                traectory.push_back(next_cell);
+                prev_cell=cur_cell;
+                cur_cell = next_cell;
+            }
+            if (next_cell==0)
+                break;
+        }
+        std::cout << "VYSHLY V CYCLE" << '\n';
+        traectory.push_back(road_finish_cell);
+    }
+
+    void setpos()
+    {
+        position_x = road_starting_cell % SIZE * CELL_SIZE + 60.0;
+        position_y = road_starting_cell / SIZE * CELL_SIZE + 60.0;
+        cur_cell = 0;
+    }
+
+    void moving()
+    {
+        sf::Vector2f dir(0,0);
+        if (cur_cell!=road_finish_cell)
+            if (traectory[cur_cell+1] - traectory[cur_cell] == 1)
+            {
+                dir.x = 1;
+                dir.y = 0;
+            }
+            if (traectory[cur_cell+1] - traectory[cur_cell] == -1)
+            {
+                dir.x = -1;
+                dir.y = 0;
+            }
+            if (traectory[cur_cell+1] - traectory[cur_cell] == SIZE)
+            {
+                dir.x = 0;
+                dir.y = 1;
+            }
+            if (traectory[cur_cell+1] - traectory[cur_cell] == -SIZE)
+            {
+                dir.x = 0;
+                dir.y = -1;
+            }
+        position_x += speed*dir.x;
+        position_y += speed*dir.y;
+
+        //РєРѕСЂСЏРІС‹Р№ РјРµС‚РѕРґ РїСЂРѕРІРµСЂРєРё РґРѕСЃС‚РёРіР»Рё Р»Рё РјС‹ СЃР»РµРґСѓСЋС‰РµР№ РєР»РµС‚РєРё РёР»Рё РЅРµС‚
+
+        sf::Vector2f div1(position_x - (traectory[cur_cell] % SIZE * CELL_SIZE + 60.0), position_y - (traectory[cur_cell] / SIZE * CELL_SIZE + 60.0));
+        sf::Vector2f div2(position_x - (traectory[cur_cell+1] % SIZE * CELL_SIZE + 60.0), position_y - (traectory[cur_cell+1] / SIZE * CELL_SIZE + 60.0));
+
+        if (dir.x!=0)
+            if (div1.x*div2.x > 0)
+                cur_cell++;
+        if (dir.y!=0)
+            if (div1.y*div2.y > 0)
+                cur_cell++;
+
+        //std::cout << div1.x << ' ' << div1.y << '\n';
+        //std::cout << div2.x << ' ' << div2.y << '\n';
+        //std::cout << '\n';
+    }
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
+    {
+        states.transform *= getTransform();
+
+        //РіРѕС‚РѕРІРёРј С„РѕСЂРјСѓ РґР»СЏ РІСЂР°РіР°
+
+        sf::RectangleShape shape(sf::Vector2f(FIELD_SIZE, FIELD_SIZE));
+
+        shape.setSize(sf::Vector2f(CELL_SIZE - 10, CELL_SIZE - 10));
+        shape.setOutlineThickness(2.0);
+        shape.setOutlineColor(sf::Color::White);
+        shape.setFillColor(sf::Color::Black);
+
+        // РџРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј С‚РµРєСЃС‚РѕРІСѓСЋ Р·Р°РіРѕС‚РѕРІРєСѓ РґР»СЏ РѕС‚СЂРёСЃРѕРІРєРё РЅРѕРјРµСЂРѕРІ РїР»Р°С€РµРє
+        sf::Text text("", font, 30);
+
+        text.setFillColor(sf::Color(255,255,255));
+        text.setString(std::to_string(current_health));
+
+        //СЃС‡РёС‚Р°РµРј РєРѕРѕСЂРґРёРЅР°С‚С‹ РІСЂР°РіР°
+
+        sf::Vector2f position(position_x,position_y);
+        shape.setPosition(position);
+
+        // РџРѕР·РёС†РёСЋ С‚РµРєСЃС‚Р° РїРѕРґР±РёСЂР°Р» РІСЂСѓС‡РЅСѓСЋ
+        text.setPosition(position_x , position_y);
+
+        //РѕС‚СЂРёСЃРѕРІС‹РІР°РµРј РІСЂР°РіР°
+        target.draw(shape, states);
+
+        // РћС‚СЂРёСЃРѕРІС‹РІР°РµРј Р·РґРѕСЂРѕРІСЊРµ
+        target.draw(text, states);
+    };
+};
+
+
+//======================================================//
 class Game
 {
 protected:
@@ -178,6 +331,8 @@ protected:
     sf::Font font;
 public:
     Field GameField;
+    Enemy Tester;
+
     Game()
     {
         font.loadFromFile("Bebas.ttf");
@@ -186,6 +341,16 @@ public:
     void Init()
     {
         Current_money = 100;
+
+        for (int i=0;i<ARRAY_SIZE;i++)
+            Tester.road[i] = GameField.road[i];
+        Tester.road_starting_cell = GameField.road_starting_cell;
+        Tester.road_finish_cell = GameField.road_finish_cell;
+        Tester.Make_Traectory();
+        Tester.setpos();
+        for ( int n : Tester.traectory ) {
+        std::cout << n << '\n';
+    }
     }
 };
 //======================================================//
@@ -205,17 +370,17 @@ int main()
             if (event.type == sf::Event::Closed) window.close();
             if (event.type == sf::Event::KeyPressed)
             {
-                // Получаем нажатую клавишу - выполняем соответствующее действие
+                // РџРѕР»СѓС‡Р°РµРј РЅР°Р¶Р°С‚СѓСЋ РєР»Р°РІРёС€Сѓ - РІС‹РїРѕР»РЅСЏРµРј СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РґРµР№СЃС‚РІРёРµ
                 if (event.key.code == sf::Keyboard::Escape) window.close();
                 if (event.key.code == sf::Keyboard::Left) game.GameField.moving(Direction::Left);
                 if (event.key.code == sf::Keyboard::Right) game.GameField.moving(Direction::Right);
                 if (event.key.code == sf::Keyboard::Up) game.GameField.moving(Direction::Up);
                 if (event.key.code == sf::Keyboard::Down) game.GameField.moving(Direction::Down);
-                //строим башню
+                //СЃС‚СЂРѕРёРј Р±Р°С€РЅСЋ
                 if (event.key.code == sf::Keyboard::Num1) game.GameField.Build_Tower(1);
                 if (event.key.code == sf::Keyboard::Num2) game.GameField.Build_Tower(2);
                 if (event.key.code == sf::Keyboard::Num3) game.GameField.Build_Tower(3);
-                // Новая игра
+                // РќРѕРІР°СЏ РёРіСЂР°
                 if (event.key.code == sf::Keyboard::F2)
                 {
                     game.Init();
@@ -224,9 +389,11 @@ int main()
             }
         }
 
-        // Выполняем необходимые действия по отрисовке
+        // Р’С‹РїРѕР»РЅСЏРµРј РЅРµРѕР±С…РѕРґРёРјС‹Рµ РґРµР№СЃС‚РІРёСЏ РїРѕ РѕС‚СЂРёСЃРѕРІРєРµ
         window.clear();
+        game.Tester.moving();
         window.draw(game.GameField);
+        window.draw(game.Tester);
         //game.Update();
         //window.draw(text);
         window.display();
