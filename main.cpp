@@ -22,15 +22,47 @@ protected:
 
     sf::Font font;
     int current_position;
-public:
+
     int road[ARRAY_SIZE];
     int road_starting_cell;
     int road_finish_cell;
+public:
 
     Field()
     {
         font.loadFromFile("Bebas.ttf");
         Init();
+    }
+
+    int get_road_starting_cell()
+    {
+        return road_starting_cell;
+    }
+
+    void set_road_starting_cell(int value)
+    {
+        road_starting_cell=value;
+    }
+
+    void set_road_finish_cell(int value)
+    {
+        road_finish_cell=value;
+    }
+
+    /*
+    void set_road(int* arr)
+    {
+        *road = arr;
+    }*/
+
+    int get_road_finish_cell()
+    {
+        return road_finish_cell;
+    }
+
+    int* get_road()
+    {
+        return road;
     }
 
     //создаем дорогу(потом сделаем рандомное создание)
@@ -184,23 +216,47 @@ public:
 class Enemy : public sf::Drawable, public sf::Transformable
 {
 protected:
-    int max_health;
+    int max_health=100;
     int current_health=100;
     int speed=1.0;
     sf::Font font;
-    int position_x=500;
-    int position_y=500;
+    int position_x;
+    int position_y;
 
-public:
-    int road[ARRAY_SIZE];
+    std::vector <int> traectory = {};
     int road_starting_cell;
     int road_finish_cell;
-    std::vector <int> traectory = {};
+    int road[ARRAY_SIZE];
     int cur_cell=0;
-
+public:
     Enemy()
     {
         font.loadFromFile("Bebas.ttf");
+    }
+
+    void set_road_starting_cell(int value)
+    {
+        road_starting_cell=value;
+    }
+
+    void set_road_finish_cell(int value)
+    {
+        road_finish_cell=value;
+    }
+
+    int get_road_starting_cell()
+    {
+        return road_starting_cell;
+    }
+
+    int get_road_finish_cell()
+    {
+        return road_finish_cell;
+    }
+
+    void set_road(int *arr)
+    {
+        std::copy(arr, arr + ARRAY_SIZE, std::begin(road));
     }
 
     void Make_Traectory()
@@ -342,15 +398,20 @@ public:
     {
         Current_money = 100;
 
+        //==========================================//
+        /*
         for (int i=0;i<ARRAY_SIZE;i++)
-            Tester.road[i] = GameField.road[i];
-        Tester.road_starting_cell = GameField.road_starting_cell;
-        Tester.road_finish_cell = GameField.road_finish_cell;
+            Tester.road[i] = GameField.get_road()[i];
+        */
+        //===========================================//
+        Tester.set_road(GameField.get_road());
+        Tester.set_road_starting_cell(GameField.get_road_starting_cell());
+        Tester.set_road_finish_cell(GameField.get_road_finish_cell());
         Tester.Make_Traectory();
         Tester.setpos();
+        /*
         for ( int n : Tester.traectory ) {
-        std::cout << n << '\n';
-    }
+        std::cout << n << '\n';}*/
     }
 };
 //======================================================//
