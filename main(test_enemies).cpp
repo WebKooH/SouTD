@@ -220,8 +220,8 @@ protected:
     int current_health=100;
     float speed=1.0;
     sf::Font font;
-    int position_x;
-    int position_y;
+    float position_x;
+    float position_y;
 
     std::vector <int> traectory = {};
     int road_starting_cell;
@@ -239,6 +239,7 @@ public:
     {
         position_x = 0;
         position_y = 0;
+        setpos();
         current_health = max_health;
     }
 
@@ -275,6 +276,11 @@ public:
     void set_road(int *arr)
     {
         std::copy(arr, arr + ARRAY_SIZE, std::begin(road));
+    }
+
+    void ReduceHealth()
+    {
+        current_health -= 1;
     }
 
     void Make_Traectory()
@@ -400,7 +406,7 @@ public:
 
 struct GameEnemy {
     Enemy himself;
-    float time;
+    float time=0;
     int max_health;
     float speed = 1.0;
 };
@@ -424,6 +430,9 @@ public:
     void Init()
     {
         Current_money = 100;
+        Field NewGameField;
+        GameField = NewGameField;
+        GameField.setPosition(50.0, 50.0);
 
         //==========================================//
         /*
@@ -450,6 +459,8 @@ public:
     void Update_Enemies()
     {
         for (int i=0;i<10;i++)
+            ARRAY_ENEMY[i].himself.ReduceHealth();
+        for (int i=0;i<10;i++)
             ARRAY_ENEMY[i].himself.moving();
         for (int i=0;i<10;i++)
             window.draw(ARRAY_ENEMY[i].himself);
@@ -462,8 +473,16 @@ int main()
     window.setFramerateLimit(60);
 
     Game game(window);
-    game.GameField.setPosition(50.0, 50.0);
     sf::Event event;
+
+    for (int i=0;i<10;i++)
+    {
+        int max_health; float speed;
+        std::cin >> max_health >> speed;
+        game.ARRAY_ENEMY[i].himself.set_max_health(max_health);
+        game.ARRAY_ENEMY[i].himself.set_speed(speed);
+        game.ARRAY_ENEMY[i].himself.Init();
+    }
 
     while (window.isOpen())
     {
@@ -487,6 +506,14 @@ int main()
                 {
                     game.Init();
                     //move_counter = 100;
+                    for (int i=0;i<10;i++)
+                    {
+                        int max_health; float speed;
+                        std::cin >> max_health >> speed;
+                        game.ARRAY_ENEMY[i].himself.set_max_health(max_health);
+                        game.ARRAY_ENEMY[i].himself.set_speed(speed);
+                        game.ARRAY_ENEMY[i].himself.Init();
+                    }
                 }
             }
         }
